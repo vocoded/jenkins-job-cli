@@ -87,7 +87,7 @@ func askParams(params []jj.ParameterDefinitions) map[string]string {
 	data := map[string]string{}
 	for _, pd := range params {
 		cline := ""
-		defVal := pd.DefaultParameterValue.Value
+		defVal, _ := pd.DefaultParameterValue.Value.(string)
 		curChoices := pd.Choices
 		for {
 			rl, err := NewReadLine(chalk.Underline.TextStyle(pd.Name)+": ", pd.Choices)
@@ -172,7 +172,7 @@ func runJob(name string) {
 		for _, pd := range params {
 			val, err := inputArgs.get(pd.Name)
 			if err != nil {
-				data[pd.Name] = pd.DefaultParameterValue.Value
+				data[pd.Name], _ = pd.DefaultParameterValue.Value.(string)
 			} else {
 				data[pd.Name] = val
 			}
@@ -231,10 +231,12 @@ func waitForExecutor(env jj.Env, queueId int) int {
 	}
 }
 
-func barHandler(jobUrl string, keyCh chan string, chMsg chan string, finishCh chan struct {
+func barHandler(env jj.Env, name string, number int, keyCh chan string, chMsg chan string, finishCh chan struct {
 	err    error
 	result string
 }, wg *sync.WaitGroup) {
+	jobUrl := env.Url + "/job/" + name + "/" + strconv.Itoa(number) + "/console"
+
 	defer wg.Done()
 	barMutex.Lock()
 	fmt.Print("\033[F")
@@ -285,9 +287,11 @@ func barHandler(jobUrl string, keyCh chan string, chMsg chan string, finishCh ch
 			}
 
 			barMutex.Lock()
-			br.SetFormat(fmt.Sprintf(jobUrl + ": " + info.result))
+			br.SetFormat(fmt.Sprintf(strings.ReplaceAll(jobUrl, "%", "%%") + ": " + info.result))
 			br.Done()
 			barMutex.Unlock()
+
+			fmt.Println(jj.GetJobOutput(env, name))
 			if info.err != nil {
 				fmt.Println(chalk.Red.Color("failed"))
 			}
@@ -300,7 +304,6 @@ func barHandler(jobUrl string, keyCh chan string, chMsg chan string, finishCh ch
 }
 
 func watchTheJob(env jj.Env, name string, number int, keyCh chan string) error {
-	jobUrl := env.Url + "/job/" + name + "/" + strconv.Itoa(number) + "/console"
 	lastBuild, _ := jj.GetLastSuccessfulBuildInfo(env, name)
 	listenerStatus = true
 	defer func() {
@@ -317,7 +320,7 @@ func watchTheJob(env jj.Env, name string, number int, keyCh chan string) error {
 	})
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go barHandler(jobUrl, keyCh, chMsg, finishCh, &wg)
+	go barHandler(env, name, number, keyCh, chMsg, finishCh, &wg)
 	defer close(closeCh)
 	defer wg.Wait()
 	go func() {

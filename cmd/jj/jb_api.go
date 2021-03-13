@@ -160,7 +160,7 @@ func GetJobInfo(env Env, jobName string) (error, *JobInfo) {
 		}
 		err = json.Unmarshal(rsp, &ji)
 		if err != nil {
-			panic("failed to get Job information")
+			panic("failed to get Job information: " + err.Error())
 		}
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -216,6 +216,18 @@ func GetJobInfo(env Env, jobName string) (error, *JobInfo) {
 //
 //}
 //
+
+func GetJobOutput(env Env, job string) (string, error) {
+	code, rsp, _, err := req(env, "POST", "job/"+job+"/lastBuild/consoleText", []byte{})
+	if err != nil {
+		panic(err)
+	}
+	if code != 200 {
+		return "", errors.New("failed to get job output,code" + strconv.Itoa(code) + ", " + string(rsp))
+	}
+
+	return string(rsp), nil
+}
 
 func GetBuildInfo(env Env, job string, id int) (*BuildInfo, error) {
 	code, rsp, _, err := req(env, "POST", "job/"+job+"/"+strconv.Itoa(id)+"/api/json", []byte{})
@@ -309,7 +321,7 @@ func GetQueueInfo(env Env, id int) (error, QueueInfo) {
 	}
 	err = json.Unmarshal(rsp, &queueInfo)
 	if err != nil {
-		return errors.New("failed to get Job information"), QueueInfo{}
+		return errors.New("failed to get Job information: " + err.Error()), QueueInfo{}
 	}
 	return nil, queueInfo
 }

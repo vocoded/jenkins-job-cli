@@ -81,8 +81,8 @@ type BuildInfo struct {
 	Id      string `json:"id"`
 	Actions []struct {
 		Parameters []struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
+			Name  string      `json:"name"`
+			Value interface{} `json:"value"`
 		} `json:"parameters,omitempty"`
 		Causes []struct {
 			ShortDescription string `json:"shortDescription"`
@@ -99,8 +99,8 @@ type BuildInfo struct {
 
 type ParameterDefinitions struct {
 	DefaultParameterValue struct {
-		Name  string `json:"name"`
-		Value string `json:"value"`
+		Name  string      `json:"name"`
+		Value interface{} `json:"value"`
 	} `json:"defaultParameterValue"`
 	Description string   `json:"description"`
 	Name        string   `json:"name"`
@@ -140,8 +140,8 @@ type JobInfo struct {
 type QueueInfo struct {
 	Actions []struct {
 		Parameters []struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
+			Name  string      `json:"name"`
+			Value interface{} `json:"value"`
 		} `json:"parameters,omitempty"`
 		Causes []struct {
 			ShortDescription string      `json:"shortDescription"`
