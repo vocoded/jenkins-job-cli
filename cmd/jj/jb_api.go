@@ -220,7 +220,7 @@ func GetJobInfo(env Env, jobName string) (error, *JobInfo) {
 func GetJobOutput(env Env, job string) (string, error) {
 	code, rsp, _, err := req(env, "POST", "job/"+job+"/lastBuild/consoleText", []byte{})
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	if code != 200 {
 		return "", errors.New("failed to get job output,code" + strconv.Itoa(code) + ", " + string(rsp))
